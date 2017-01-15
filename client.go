@@ -25,6 +25,7 @@ func (client Client) SendVote(vote Vote) error {
 	}
 	defer conn.Close()
 
+	conn.SetDeadline(time.Now().Add(3 * time.Second))
 	serialized, err := vote.Serialize(client.publicKey)
 	if err != nil {
 		return err

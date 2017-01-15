@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"time"
 )
 
 type Server struct {
@@ -17,11 +18,11 @@ func NewServer(privateKey *rsa.PrivateKey, voteHandler func(Vote)) Server {
 	return Server{privateKey: privateKey, voteHandler: voteHandler}
 }
 
-func (server Server) Close() {
+func (server *Server) Close() {
 	server.listener.Close()
 }
 
-func (server Server) ListenAndServe(address string) {
+func (server *Server) ListenAndServe(address string) {
 	l, err := net.Listen("tcp", address)
 	if err != nil {
 		log.Println(err)
@@ -39,6 +40,7 @@ func (server Server) ListenAndServe(address string) {
 		// Handle the connection.
 		go func(c net.Conn) {
 			defer c.Close()
+			c.SetDeadline(time.Now().Add(5 * time.Second))
 
 			// Write greeting
 			_, err := io.WriteString(c, "VOTIFIER 1.9\r\n")
