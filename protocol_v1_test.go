@@ -22,7 +22,7 @@ func isEq(expected string, got string, n string, t *testing.T) {
 	}
 }
 
-func TestSerialization(t *testing.T) {
+func TestSerializationv1(t *testing.T) {
 	v := NewVote("golang", "golang", "127.0.0.1")
 
 	// Generate a set of keys for later use
@@ -32,7 +32,7 @@ func TestSerialization(t *testing.T) {
 	}
 
 	// Try to encrypt this vote.
-	s, err := v.Serialize(&key.PublicKey)
+	s, err := v.serializev1(&key.PublicKey)
 	if err != nil {
 		t.Error(err)
 	}
@@ -42,7 +42,7 @@ func TestSerialization(t *testing.T) {
 	}
 
 	// Try to decrypt this vote.
-	d, err := Deserialize(*s, key)
+	d, err := deserializev1(*s, key)
 	if err != nil {
 		t.Error(err)
 	}

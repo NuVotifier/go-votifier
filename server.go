@@ -57,7 +57,7 @@ func (server *Server) ListenAndServe(address string) {
 				return
 			}
 
-			v, err := Deserialize(data, server.privateKey)
+			v, err := deserializev1(data, server.privateKey)
 			if err != nil {
 				log.Println(err)
 				return

@@ -5,29 +5,9 @@ import (
 	"crypto/rsa"
 	"fmt"
 	"strings"
-	"time"
 )
 
-type Vote struct {
-	// The name of the service the user is voting from.
-	ServiceName string
-
-	// The user's Minecraft username.
-	Username string
-
-	// The voting user's IP address.
-	Address string
-
-	// The timestamp this vote was issued.
-	Timestamp string
-}
-
-// Creates a new vote, filling in the timestamp.
-func NewVote(serviceName string, username string, address string) Vote {
-	return Vote{serviceName, username, address, time.Now().String()}
-}
-
-func Deserialize(msg []byte, privateKey *rsa.PrivateKey) (*Vote, error) {
+func deserializev1(msg []byte, privateKey *rsa.PrivateKey) (*Vote, error) {
 	decrypted, err := rsa.DecryptPKCS1v15(rand.Reader, privateKey, msg)
 	if err != nil {
 		return nil, err
@@ -44,7 +24,7 @@ func Deserialize(msg []byte, privateKey *rsa.PrivateKey) (*Vote, error) {
 }
 
 // Serializes the vote.
-func (vote Vote) Serialize(publicKey *rsa.PublicKey) (*[]byte, error) {
+func (vote Vote) serializev1(publicKey *rsa.PublicKey) (*[]byte, error) {
 	s := strings.Join([]string{"VOTE", vote.ServiceName, vote.Username, vote.Address, vote.Timestamp, ""}, "\n")
 	msg := []byte(s)
 
