@@ -24,7 +24,7 @@ type votifier2Inner struct {
 	ServiceName string `json:"serviceName"`
 	Username    string `json:"username"`
 	Address     string `json:"address"`
-	Timestamp   int64  `json:"timeStamp"`
+	Timestamp   int64  `json:"timestamp"`
 	Challenge   string `json:"challenge"`
 }
 
