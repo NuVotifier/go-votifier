@@ -45,7 +45,7 @@ func (client *V2Client) SendVote(vote Vote) error {
 	if len(parts) != 3 {
 		return errors.New("not a v2 server")
 	}
-	challenge := string(parts[3][len(parts[3])-2])
+	challenge := string(parts[2][len(parts[2])-2])
 
 	serialized, err := vote.serializev2(client.token, challenge)
 	if err != nil {
