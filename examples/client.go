@@ -38,7 +38,7 @@ func main() {
   }
 
   key := pkt.(*rsa.PublicKey)
-  client := votifier.NewClient(*address, key)
+  client := votifier.NewV1Client(*address, key)
   v := votifier.NewVote(*serviceName, *username, *vAddress)
   err = client.SendVote(v)
   if err != nil {

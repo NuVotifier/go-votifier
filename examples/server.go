@@ -32,9 +32,10 @@ func main() {
   encodedPubKey := base64.StdEncoding.EncodeToString(pubKey)
   log.Println("Listening on " + *address)
   log.Println("Here's your public key: " + encodedPubKey)
+  log.Println("Your v2 token: abcxyz")
 
   server := votifier.NewServer(key, func(vote votifier.Vote) {
     log.Println("Got vote: ", vote)
-  })
+  }, votifier.StaticServiceTokenIdentifier("abcxyz"))
   server.ListenAndServe(*address)
 }

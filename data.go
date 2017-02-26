@@ -1,9 +1,11 @@
 package votifier
 
 import (
+	"strconv"
 	"time"
 )
 
+// Vote represents a Votifier vote.
 type Vote struct {
 	// The name of the service the user is voting from.
 	ServiceName string `json:"serviceName"`
@@ -18,7 +20,7 @@ type Vote struct {
 	Timestamp string `json:"timeStamp"`
 }
 
-// Creates a new vote, filling in the timestamp.
+// NewVote creates a new vote and pre-fills the timestamp.
 func NewVote(serviceName string, username string, address string) Vote {
-	return Vote{serviceName, username, address, time.Now().String()}
+	return Vote{serviceName, username, address, strconv.FormatInt(time.Now().UnixNano()/int64(time.Millisecond), 10)}
 }

@@ -10,16 +10,10 @@ import (
 type badRandomReader struct{}
 
 func (badRandomReader) Read(p []byte) (n int, err error) {
-	for i, _ := range p {
+	for i := range p {
 		p[i] = byte(rand.Intn(255))
 	}
 	return len(p), nil
-}
-
-func isEq(expected string, got string, n string, t *testing.T) {
-	if expected != got {
-		t.Error("Field %s doesn't match; expected '%s', got '%s'", n, expected, got)
-	}
 }
 
 func TestSerializationv1(t *testing.T) {
@@ -29,26 +23,30 @@ func TestSerializationv1(t *testing.T) {
 	key, err := rsa.GenerateKey(new(badRandomReader), 2048)
 	if err != nil {
 		t.Error(err)
+		return
 	}
 
 	// Try to encrypt this vote.
 	s, err := v.serializev1(&key.PublicKey)
 	if err != nil {
 		t.Error(err)
+		return
 	}
 
 	if len(*s) != 256 {
 		t.Error("Encrypted PKCS1v15 output should be 256 bytes, but it is %d bytes long", len(*s))
+		return
 	}
 
 	// Try to decrypt this vote.
 	d, err := deserializev1(*s, key)
 	if err != nil {
 		t.Error(err)
+		return
 	}
 
-	isEq(v.ServiceName, d.ServiceName, "ServiceName", t)
-	isEq(v.Username, d.Username, "Username", t)
-	isEq(v.Address, d.Address, "Address", t)
-	isEq(v.Timestamp, d.Timestamp, "Timestamp", t)
+	if v != *d {
+		t.Error("Votes don't match")
+		return
+	}
 }
