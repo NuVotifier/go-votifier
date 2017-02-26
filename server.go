@@ -1,7 +1,9 @@
 package votifier
 
 import (
+	"bytes"
 	"crypto/rsa"
+	"encoding/binary"
 	"io"
 	"log"
 	"net"
@@ -48,8 +50,7 @@ func (server *Server) Serve(l net.Listener) error {
 			c.SetDeadline(time.Now().Add(5 * time.Second))
 
 			// Write greeting
-			_, err = io.WriteString(c, "VOTIFIER 2.0 "+challenge+"\r\n")
-			if err != nil {
+			if _, err = io.WriteString(c, "VOTIFIER 2.0 "+challenge+"\n"); err != nil {
 				log.Println(err)
 				return
 			}
@@ -62,7 +63,15 @@ func (server *Server) Serve(l net.Listener) error {
 				return
 			}
 
-			if read == 256 {
+			// Do we have v2 magic?
+			reader := bytes.NewReader(data[:2])
+			var magicRead int16
+			if err = binary.Read(reader, binary.BigEndian, &magicRead); err != nil {
+				log.Println(err)
+				return
+			}
+
+			if magicRead != v2Magic {
 				v, err := deserializev1(data[:read], server.privateKey)
 				if err != nil {
 					log.Println(err)

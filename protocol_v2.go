@@ -16,8 +16,8 @@ const (
 )
 
 type votifier2Wrapper struct {
-	Payload   string
-	Signature []byte
+	Payload   string `json:"payload"`
+	Signature []byte `json:"signature"`
 }
 
 type votifier2Inner struct {
@@ -47,21 +47,18 @@ func deserializev2(msg []byte, tokenFunc ServiceTokenIdentifier, challenge strin
 
 	// read message length
 	var bytes int16
-	err = binary.Read(reader, binary.BigEndian, &bytes)
-	if err != nil {
+	if err = binary.Read(reader, binary.BigEndian, &bytes); err != nil {
 		return nil, err
 	}
 
 	// now for the fun part
 	var wrapper votifier2Wrapper
-	err = json.NewDecoder(reader).Decode(&wrapper)
-	if err != nil {
+	if err = json.NewDecoder(reader).Decode(&wrapper); err != nil {
 		return nil, err
 	}
 
 	var vote votifier2Inner
-	err = json.NewDecoder(strings.NewReader(wrapper.Payload)).Decode(&vote)
-	if err != nil {
+	if err = json.NewDecoder(strings.NewReader(wrapper.Payload)).Decode(&vote); err != nil {
 		return nil, err
 	}
 
