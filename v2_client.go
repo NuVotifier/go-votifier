@@ -20,7 +20,7 @@ type v2Response struct {
 	Error  string
 }
 
-// NewV2Client creates a new Votifier client.
+// NewV2Client creates a new Votifier v2 client.
 func NewV2Client(address string, token string) *V2Client {
 	return &V2Client{address, token}
 }

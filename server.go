@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// Server represents a Votifier server.
 type Server struct {
 	listener    net.Listener
 	voteHandler func(Vote)
@@ -15,28 +16,28 @@ type Server struct {
 	tokenFunc   ServiceTokenIdentifier
 }
 
+// NewServer creates a new Votifier server.
 func NewServer(privateKey *rsa.PrivateKey, voteHandler func(Vote), tokenFunc ServiceTokenIdentifier) Server {
 	return Server{privateKey: privateKey, voteHandler: voteHandler,
 		tokenFunc: tokenFunc}
 }
 
-func (server *Server) Close() {
-	server.listener.Close()
-}
-
-func (server *Server) ListenAndServe(address string) {
+// ListenAndServe binds to a specified address-port pair and starts serving Votifier requests.
+func (server *Server) ListenAndServe(address string) error {
 	l, err := net.Listen("tcp", address)
 	if err != nil {
-		log.Println(err)
-		return
+		return err
 	}
-	server.listener = l
+	return server.Serve(l)
+}
+
+// Serve serves requests on the provided listener.
+func (server *Server) Serve(l net.Listener) error {
 	for {
 		// Wait for a connection.
 		conn, err := l.Accept()
 		if err != nil {
-			log.Println(err)
-			break
+			return err
 		}
 
 		// Handle the connection.

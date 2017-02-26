@@ -106,12 +106,12 @@ func (v Vote) serializev2(token string, challenge string) (*[]byte, error) {
 		return nil, err
 	}
 
-	innerJson := innerBuf.String()
+	innerJSON := innerBuf.String()
 	m := hmac.New(sha256.New, []byte(token))
 	innerBuf.WriteTo(m)
 
 	wrapper := votifier2Wrapper{
-		Payload:   innerJson,
+		Payload:   innerJSON,
 		Signature: m.Sum(nil),
 	}
 
