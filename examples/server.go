@@ -34,8 +34,8 @@ func main() {
   log.Println("Here's your public key: " + encodedPubKey)
   log.Println("Your v2 token: abcxyz")
 
-  server := votifier.NewServer(key, func(vote votifier.Vote) {
-    log.Println("Got vote: ", vote)
+  server := votifier.NewServer(key, func(vote votifier.Vote, version int) {
+    log.Println("Got vote: ", vote, ", version: " , version)
   }, votifier.StaticServiceTokenIdentifier("abcxyz"))
   server.ListenAndServe(*address)
 }

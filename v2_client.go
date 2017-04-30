@@ -15,9 +15,9 @@ type V2Client struct {
 }
 
 type v2Response struct {
-	Status string
-	Cause  string
-	Error  string
+	Status string `json:'status'`
+	Cause  string `json:'cause'`
+	Error  string `json:'error'`
 }
 
 // NewV2Client creates a new Votifier v2 client.
