@@ -30,12 +30,18 @@ func main() {
   }
 
   encodedPubKey := base64.StdEncoding.EncodeToString(pubKey)
+  tokenPrime, err := rand.Prime(rand.Reader, 130)
+  if err != nil {
+    log.Fatalf("creating token: %v", err)
+  }
+  token := tokenPrime.Text(36)
+
   log.Println("Listening on " + *address)
   log.Println("Here's your public key: " + encodedPubKey)
-  log.Println("Your v2 token: abcxyz")
+  log.Println("Your v2 token: " + token)
 
   server := votifier.NewServer(key, func(vote votifier.Vote, version int) {
     log.Println("Got vote: ", vote, ", version: " , version)
-  }, votifier.StaticServiceTokenIdentifier("abcxyz"))
+  }, votifier.StaticServiceTokenIdentifier(token))
   server.ListenAndServe(*address)
 }
