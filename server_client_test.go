@@ -8,6 +8,10 @@ import (
 	"testing"
 )
 
+var (
+	Protocols = []VotifierProtocol{VotifierV1, VotifierV2}
+)
+
 func TestServer(t *testing.T) {
 	v := NewVote("golang", "golang", "127.0.0.1")
 
@@ -18,8 +22,8 @@ func TestServer(t *testing.T) {
 		return
 	}
 
-	for i := 1; i <= 2; i++ {
-		vl := func(rv Vote, ver int) {
+	for _, i := range Protocols {
+		vl := func(rv Vote, ver VotifierProtocol) {
 			if rv != v {
 				t.Error("Vote received did not match original")
 			}
@@ -36,10 +40,11 @@ func TestServer(t *testing.T) {
 		defer listener.Close()
 
 		var client Client
-		if i == 1 {
+		switch i {
+		case VotifierV1:
 			pk := key.PublicKey
 			client = NewV1Client(listener.Addr().String(), &pk)
-		} else {
+		case VotifierV2:
 			client = NewV2Client(listener.Addr().String(), "abcxyz")
 		}
 		server := NewServer(key, vl, StaticServiceTokenIdentifier("abcxyz"))
@@ -53,7 +58,7 @@ func TestServer(t *testing.T) {
 }
 
 func TestServerv2Panic(t *testing.T) {
-	vl := func(rv Vote, ver int) {
+	vl := func(rv Vote, ver VotifierProtocol) {
 		panic(errors.New("boom"))
 	}
 

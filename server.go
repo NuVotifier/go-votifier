@@ -12,8 +12,15 @@ import (
 	"time"
 )
 
+type VotifierProtocol int
+
+const (
+	VotifierV1 VotifierProtocol = iota
+	VotifierV2 VotifierProtocol = iota
+)
+
 // VoteListener takes a vote and an int describing the protocol version (1 or 2).
-type VoteListener func(Vote, int)
+type VoteListener func(Vote, VotifierProtocol)
 
 // Server represents a Votifier server.
 type Server struct {
@@ -51,11 +58,17 @@ func (server *Server) Serve(l net.Listener) error {
 		go func(c net.Conn) {
 			defer c.Close()
 
-			challenge := randomString()
+			challenge, err := randomString()
+			if err != nil {
+				// something very bad happened - only caused when /dev/urandom
+				// also returns an error, which should never happen.
+				log.Println(err)
+				return
+			}
 			c.SetDeadline(time.Now().Add(5 * time.Second))
 
 			// Write greeting
-			if _, err = io.WriteString(c, "VOTIFIER 2.0 "+challenge+"\n"); err != nil {
+			if _, err = io.WriteString(c, "VOTIFIER 2 "+challenge+"\n"); err != nil {
 				log.Println(err)
 				return
 			}
@@ -101,7 +114,7 @@ func (server *Server) Serve(l net.Listener) error {
 					return
 				}
 
-				server.voteHandler(*v, 1)
+				server.voteHandler(*v, VotifierV1)
 			} else {
 				v, err := deserializev2(data[:read], server.tokenFunc, challenge)
 				if err != nil {
@@ -115,7 +128,7 @@ func (server *Server) Serve(l net.Listener) error {
 					return
 				}
 
-				server.voteHandler(*v, 2)
+				server.voteHandler(*v, VotifierV2)
 
 				_, err = io.WriteString(c, "{\"status\":\"ok\"}")
 				if err != nil {

@@ -1,19 +1,18 @@
 package votifier
 
 import (
-	"math/rand"
-	"time"
+	"crypto/rand"
+	"encoding/base64"
 )
 
-const alpha = "abcdefghijklmnopqrstuvwxyz0123456789"
-
-func randomString() string {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+func randomString() (string, error) {
 	p := make([]byte, 24)
-	for i := range p {
-		p[i] = alpha[r.Intn(len(alpha))]
+	_, err := rand.Read(p)
+	if err != nil {
+		return "", err
 	}
-	return string(p)
+
+	return base64.RawStdEncoding.EncodeToString(p), nil
 }
 
 // StaticServiceTokenIdentifier returns a ServiceTokenIdentifier that returns a static token for any service.

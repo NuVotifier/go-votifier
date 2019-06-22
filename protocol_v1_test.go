@@ -34,7 +34,7 @@ func TestSerializationv1(t *testing.T) {
 	}
 
 	if len(*s) != 256 {
-		t.Error("Encrypted PKCS1v15 output should be 256 bytes, but it is %d bytes long", len(*s))
+		t.Errorf("Encrypted PKCS1v15 output should be 256 bytes, but it is %d bytes long", len(*s))
 		return
 	}
 
