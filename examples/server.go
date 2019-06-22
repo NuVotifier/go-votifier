@@ -40,8 +40,16 @@ func main() {
 	log.Println("Here's your public key: " + encodedPubKey)
 	log.Println("Your v2 token: " + token)
 
-	server := votifier.NewServer(key, func(vote votifier.Vote, version int) {
-		log.Println("Got vote: ", vote, ", version: ", version)
-	}, votifier.StaticServiceTokenIdentifier(token))
+	r := []votifier.ReceiverRecord{
+		votifier.ReceiverRecord{
+			PrivateKey: key,
+			TokenId:    votifier.StaticServiceTokenIdentifier(token),
+		},
+	}
+
+	server := votifier.NewServer(
+		func(vote votifier.Vote, version votifier.VotifierProtocol, meta interface{}) {
+			log.Println("Got vote: ", vote, ", version: ", version)
+		}, r)
 	server.ListenAndServe(*address)
 }

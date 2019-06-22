@@ -20,20 +20,27 @@ const (
 )
 
 // VoteListener takes a vote and an int describing the protocol version (1 or 2).
-type VoteListener func(Vote, VotifierProtocol)
+type VoteListener func(Vote, VotifierProtocol, interface{})
+
+type ReceiverRecord struct {
+	PrivateKey *rsa.PrivateKey        // v1
+	TokenId    ServiceTokenIdentifier // v2
+	Metadata   interface{}
+}
 
 // Server represents a Votifier server.
 type Server struct {
 	listener    net.Listener
 	voteHandler VoteListener
-	privateKey  *rsa.PrivateKey
-	tokenFunc   ServiceTokenIdentifier
+	records     []ReceiverRecord
 }
 
 // NewServer creates a new Votifier server.
-func NewServer(privateKey *rsa.PrivateKey, voteHandler VoteListener, tokenFunc ServiceTokenIdentifier) Server {
-	return Server{privateKey: privateKey, voteHandler: voteHandler,
-		tokenFunc: tokenFunc}
+func NewServer(voteHandler VoteListener, records []ReceiverRecord) Server {
+	return Server{
+		voteHandler: voteHandler,
+		records:     records,
+	}
 }
 
 // ListenAndServe binds to a specified address-port pair and starts serving Votifier requests.
@@ -107,34 +114,36 @@ func (server *Server) Serve(l net.Listener) error {
 				}
 			}()
 
-			if !isv2 && server.privateKey != nil {
-				v, err := deserializev1(data[:read], server.privateKey)
-				if err != nil {
-					log.Println(err)
-					return
-				}
-
-				server.voteHandler(*v, VotifierV1)
-			} else {
-				v, err := deserializev2(data[:read], server.tokenFunc, challenge)
-				if err != nil {
-					log.Println(err)
-					result := v2Response{
-						Status: "error",
-						Error:  err.Error(),
-						Cause:  "decode",
+			for _, record := range server.records {
+				if !isv2 && record.PrivateKey != nil {
+					v, err := deserializev1(data[:read], record.PrivateKey)
+					if err != nil {
+						continue
 					}
-					json.NewEncoder(c).Encode(result)
+
+					server.voteHandler(*v, VotifierV1, record.Metadata)
+					return
+				} else {
+					v, err := deserializev2(data[:read], record.TokenId, challenge)
+					if err != nil {
+						continue
+					}
+
+					server.voteHandler(*v, VotifierV2, record.Metadata)
+
+					io.WriteString(c, "{\"status\":\"ok\"}")
 					return
 				}
+			}
 
-				server.voteHandler(*v, VotifierV2)
-
-				_, err = io.WriteString(c, "{\"status\":\"ok\"}")
-				if err != nil {
-					log.Println(err)
-					return
+			// We couldn't decrypt it correctly
+			if isv2 {
+				result := v2Response{
+					Status: "error",
+					Error:  err.Error(),
+					Cause:  "decode",
 				}
+				json.NewEncoder(c).Encode(result)
 			}
 		}(conn)
 	}

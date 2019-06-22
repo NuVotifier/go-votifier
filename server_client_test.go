@@ -23,7 +23,7 @@ func TestServer(t *testing.T) {
 	}
 
 	for _, i := range Protocols {
-		vl := func(rv Vote, ver VotifierProtocol) {
+		vl := func(rv Vote, ver VotifierProtocol, meta interface{}) {
 			if rv != v {
 				t.Error("Vote received did not match original")
 			}
@@ -47,7 +47,14 @@ func TestServer(t *testing.T) {
 		case VotifierV2:
 			client = NewV2Client(listener.Addr().String(), "abcxyz")
 		}
-		server := NewServer(key, vl, StaticServiceTokenIdentifier("abcxyz"))
+		r := []ReceiverRecord{
+			ReceiverRecord{
+				PrivateKey: key,
+				TokenId:    StaticServiceTokenIdentifier("abcxyz"),
+				Metadata:   nil,
+			},
+		}
+		server := NewServer(vl, r)
 		go server.Serve(listener)
 
 		err = client.SendVote(v)
@@ -58,7 +65,7 @@ func TestServer(t *testing.T) {
 }
 
 func TestServerv2Panic(t *testing.T) {
-	vl := func(rv Vote, ver VotifierProtocol) {
+	vl := func(rv Vote, ver VotifierProtocol, meta interface{}) {
 		panic(errors.New("boom"))
 	}
 
@@ -67,7 +74,14 @@ func TestServerv2Panic(t *testing.T) {
 		t.Error(err)
 	}
 	defer listener.Close()
-	server := NewServer(nil, vl, StaticServiceTokenIdentifier("abcxyz"))
+	r := []ReceiverRecord{
+		ReceiverRecord{
+			PrivateKey: nil,
+			TokenId:    StaticServiceTokenIdentifier("abcxyz"),
+			Metadata:   nil,
+		},
+	}
+	server := NewServer(vl, r)
 	go server.Serve(listener)
 
 	client := NewV2Client(listener.Addr().String(), "abcxyz")
